@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Microsoft.Data.SqlClient;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace SalesDbControllers
 {
     public class CustomerController 
-    {
+    {      //establish connection
         private static Connection connection { get; set; }
         public CustomerController(Connection connection)
         {
@@ -25,7 +26,50 @@ namespace SalesDbControllers
             };
             return customer;
         }
+        private void FillCustomerFromUpdateorChange(SqlCommand sqlcmd, Customer customer)
+        {   sqlcmd.Parameters.AddWithValue("@Name", customer.Name);
+            sqlcmd.Parameters.AddWithValue("@City", customer.City);
+            sqlcmd.Parameters.AddWithValue("@State", customer.State);
+            sqlcmd.Parameters.AddWithValue("@Sales", customer.Sales);
+            sqlcmd.Parameters.AddWithValue("@Active", customer.Active);
+        }
+        //Delete records
+        public bool Remove(Customer customer)
+        {
+            var sql = $"Delete From Customerss " +
+                  "Where Id = @Id;";
+            var sqlcmd = new SqlCommand(sql, connection.SqlConn);
+            sqlcmd.Parameters.AddWithValue("@Id", customer.Id);
+            var rowsAffected = sqlcmd.ExecuteNonQuery();
+            return (rowsAffected == 1);
+        }
+        //update data in table
 
+        public bool Change(Customer customer)
+        {
+            var sql = $"UPDATE Customers Set " +
+                "Name = @Name, " +
+                "City = @City, " +
+                "State = @State, " +
+                "Sales = @Sales, " +
+                "Active = @Active" +
+                  "Where Id = @Id;";
+            var sqlcmd = new SqlCommand(sql, connection.SqlConn);
+            sqlcmd.Parameters.AddWithValue("@Id", customer.Id);
+            FillCustomerFromUpdateorChange(sqlcmd, customer);
+            var rowsAffected = sqlcmd.ExecuteNonQuery();
+            return (rowsAffected == 1);
+        }
+        //create data in table
+        public bool Create(Customer customer)
+        {
+            var sql = $"INSERT into Customers " + "(Id, Name, City, State, Sales, Active)" +
+                   " VALUES " + $" (@Id, @Name, @City, @State, @Sales, @Active);";
+            var sqlcmd = new SqlCommand(sql, connection.SqlConn);
+            FillCustomerFromUpdateorChange(sqlcmd, customer);
+            var rowsAffected = sqlcmd.ExecuteNonQuery();
+            return (rowsAffected == 1);
+        }
         //read all data
         public List<Customer> GetAll()
         {
@@ -35,16 +79,16 @@ namespace SalesDbControllers
             var customers = new List<Customer>();
             while (reader.Read())
             {
-                var vendor = FillCustomerFromReader(reader);
+                var customer = FillCustomerFromReader(reader);
                 customers.Add(customer);
             }
             reader.Close();
-            return customer;
+            return customers;
         }
         //read by primary key
-        public Vendor GetByPK(int id)
+        public Customer GetByPK(int id)
         {
-            var sql = $"SELECT * From Vendors where id = {id};";
+            var sql = $"SELECT * From Customers where id = {id};";
             var sqlcmd = new SqlCommand(sql, connection.SqlConn);
             var reader = sqlcmd.ExecuteReader();
             if (!reader.HasRows)
@@ -53,7 +97,7 @@ namespace SalesDbControllers
                 return null;
             }
             reader.Read();
-            var vendor = FillVendorFromReader(reader);
+            var vendor = FillCustomerFromReader(reader);
             reader.Close();
             return vendor;
         }

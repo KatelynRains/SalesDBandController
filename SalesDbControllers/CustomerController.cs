@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SalesDbControllers
 {
-    public class CustomerController
+    public class CustomerController 
     {
         private static Connection connection { get; set; }
         public CustomerController(Connection connection)
